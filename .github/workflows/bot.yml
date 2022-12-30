@@ -20,6 +20,7 @@ jobs:
       - name: execute py script 
         run: |
           python add_quotes.py
+          python add_authors.py
         env:
           A_BOT_CONSUMER_KEY: ${{secrets.A_BOT_CONSUMER_KEY}}
           A_BOT_CONSUMER_SECRET: ${{secrets.A_BOT_CONSUMER_SECRET}}
@@ -27,3 +28,4 @@ jobs:
           A_BOT_ACCESS_TOKEN_SECRET: ${{secrets.A_BOT_ACCESS_TOKEN_SECRET}}
           DETA_KEY: ${{secrets.DETA_KEY}}
           A_URLL: ${{secrets.A_URLL}}
+          DETA_KEY: ${{secrets.DETA_KEY}}
