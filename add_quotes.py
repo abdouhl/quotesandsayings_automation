@@ -2,7 +2,7 @@ import tweepy
 from os.path import join, dirname
 from dotenv import load_dotenv
 import os
-from deta import Deta
+from supabase import create_client, Client
 import requests
 
 
@@ -19,39 +19,48 @@ auth = tweepy.OAuthHandler(
         twitter_auth_keys['consumer_key'],
         twitter_auth_keys['consumer_secret']
         )
+
 auth.set_access_token(
         twitter_auth_keys['access_token'],
         twitter_auth_keys['access_token_secret']
         )
+
 api = tweepy.API(auth)
 
-deta = Deta(os.environ.get("DETA_KEY"))
-quotes = deta.Base("quotes")
+supabase: Client = create_client(os.environ.get("SUPABASE_URL"),os.environ.get("SUPABASE_KEY"))
 
 likes_ids = api.get_favorites(count=200).ids()
 
 for like_id in likes_ids:
-    if quotes.fetch({"tweet_id":like_id}).count != 0:
-        continue
-    try:
-        tweett_url = os.environ.get("A_URLL")+ f"{like_id}"
-        tweett = requests.get(tweett_url).json()
-    except:
-        continue
-    lang = tweett['lang']
-    first = tweett['display_text_range'][0]
-    last = tweett['display_text_range'][1]
-    text = tweett['text'][first:last]
-    username = tweett['user']['screen_name'] 
-    key = 1_000_000_000 - tweett['favorite_count']
-    key = str(key).zfill(9)
-    if quotes.fetch({"key":key}).count != 0:
-        num = 0
-        while quotes.fetch({"key":key+ str(num)}).count != 0:
-            num += 1
-        quotes.put({"key":key+str(num),"lang":lang,"tweet_id":like_id,"username":username,"text":text})
-        continue
-    quotes.put({"key":key,"lang":lang,"tweet_id":like_id,"username":username,"text":text})
+	if supabase.table("quotes").select('*').eq('tweet_id',str(like_id)).execute().data != []:
+		continue
+	try:
+		tweett_url = os.environ.get("A_URLL")+ f"{like_id}"
+		tweett = requests.get(tweett_url).json()
+	except:
+		continue
+	lang = tweett['lang']
+	first = tweett['display_text_range'][0]
+	last = tweett['display_text_range'][1]
+	text = tweett['text'][first:last]
+	username = tweett['user']['screen_name'] 
+	auth_data = supabase.table("authors").select('*').eq('screen_name',username).execute().data
+	if auth_data == []:
+		req = requests.get(os.environ.get("DETA_URLL")+username)
+		try:
+			data =req.json()
+		except:
+			continue
+		supabase.table("authors").insert({'followers_count': data['followers_count'], 'profile_image': data['profile_image'], 'name': data['name'], 'screen_name': username, 'en': lang == 'en', 'es': lang == 'es', 'fr': lang == 'fr'}).execute()
+
+	elif not auth_data[0][lang]:
+		req = requests.get(os.environ.get("DETA_URLL")+username)
+		try:
+			data =req.json()
+		except:
+			continue
+		supabase.table("authors").update({'followers_count': data['followers_count'], 'profile_image': data['profile_image'], 'name': data['name'], 'screen_name': username, 'en': lang == 'en' or auth_data[0]["en"], 'es': lang == 'es' or auth_data[0]["es"], 'fr': lang == 'fr' or auth_data[0]["fr"]}).eq("key", auth_data[0]["key"]).execute()
+	supabase.table("quotes").insert({'lang': lang, 'text': text, 'tweet_id': str(like_id), 'username': username}).execute()
 
     
     
