@@ -1,4 +1,4 @@
-name: twitter bot
+name: update authors bot
 
 on:
   schedule:
