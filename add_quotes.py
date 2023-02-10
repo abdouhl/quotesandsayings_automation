@@ -51,7 +51,7 @@ for like_id in likes_ids:
 			data =req.json()
 		except:
 			continue
-		supabase.table("authors").insert({'followers_count': data['followers_count'], 'profile_image': data['profile_image'], 'name': data['name'], 'screen_name': username, 'en': lang == 'en', 'es': lang == 'es', 'fr': lang == 'fr', 'pt': lang == 'pt', 'de': lang == 'de'}).execute()
+		supabase.table("authors").insert({'followers_count': data['followers_count'], 'profile_image': data['profile_image'], 'name': data['name'], 'screen_name': username, 'en': lang == 'en', 'es': lang == 'es', 'fr': lang == 'fr', 'pt': lang == 'pt', 'de': lang == 'de', 'ar': lang == 'ar'}).execute()
 
 	elif not auth_data[0][lang]:
 		req = requests.get(os.environ.get("DETA_URLL")+username)
@@ -59,7 +59,7 @@ for like_id in likes_ids:
 			data =req.json()
 		except:
 			continue
-		supabase.table("authors").update({'followers_count': data['followers_count'], 'profile_image': data['profile_image'], 'name': data['name'], 'screen_name': username, 'en': lang == 'en' or auth_data[0]["en"], 'es': lang == 'es' or auth_data[0]["es"], 'fr': lang == 'fr' or auth_data[0]["fr"], 'pt': lang == 'pt' or auth_data[0]["pt"], 'de': lang == 'de' or auth_data[0]["de"]}).eq("key", auth_data[0]["key"]).execute()
+		supabase.table("authors").update({'followers_count': data['followers_count'], 'profile_image': data['profile_image'], 'name': data['name'], 'screen_name': username, 'en': lang == 'en' or auth_data[0]["en"], 'es': lang == 'es' or auth_data[0]["es"], 'fr': lang == 'fr' or auth_data[0]["fr"], 'pt': lang == 'pt' or auth_data[0]["pt"], 'de': lang == 'de' or auth_data[0]["de"], 'ar': lang == 'ar' or auth_data[0]["ar"]}).eq("key", auth_data[0]["key"]).execute()
 	supabase.table("quotes").insert({'lang': lang, 'text': text, 'tweet_id': str(like_id), 'username': username}).execute()
 
     
